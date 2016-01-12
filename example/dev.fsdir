@@ -1,0 +1,13 @@
+TOUCH 'example/target/dummy_file.md' 'example/target/dummy_file.md'
+
+EDIT 'example/target/a_new_file.md' APPEND (Hello!)
+READ 'example/target/a_new_file.md' COPYTO (example/target/dummy_file_2.md)
+
+EDIT 'example/target/a_new_file.md' SETTO (Hello!) {
+    Hello world!
+    This is Shelo!
+}
+
+TOUCH 'example/target/dummy_file.md'
+
+REMOVE 'example/target/dummy_file.md'
