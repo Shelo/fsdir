@@ -1,11 +1,14 @@
 import re
+from fsdir.core import DummyFileSystem
 
 
 class Extract(object):
-    def __init__(self, kw, tokens, sub_extract=None):
+    def __init__(self, kw, tokens, line, sub_extract=None):
         self.keyword = kw
         self.tokens = tokens
         self.sub_extract = sub_extract
+        self.line = line
+        self.error = None
 
 
 class FSDirector(object):
@@ -20,13 +23,15 @@ class FSDirector(object):
     procedure_regex = re.compile("([A-Z]+) *( *\(.*\) *)* *(\{?)")
 
     def __init__(self):
-        self.cached = []
+        self.cache = []
 
         self.directives = []
         self.procedures = []
 
         self.lines = []
         self.current_line = 0
+
+        self.dummy_fs = DummyFileSystem()
 
     def load(self, file_path):
         """
@@ -47,12 +52,40 @@ class FSDirector(object):
         :param script:      script as string.
         :return:
         """
-        self.lines = [line for line in script.split("\n") if line]
+        self.lines = [line for line in script.split("\n")]
 
         while self.current_line < len(self.lines):
             line = self.lines[self.current_line]
             self.current_line += 1
-            self.process_line(line)
+
+            if line:
+                self.process_line(line)
+
+    def validate(self):
+        """
+        Validates every step to be taken.
+
+        :return:
+        """
+        for directive, procedure, extract in self.cache:
+            if not directive.validate(self.dummy_fs, extract):
+                raise ValueError("[%d] Directive %s cannot take the values: %s" %
+                                 (extract.line, directive.keyword(), str(extract.tokens)))
+
+            if procedure:
+                if not procedure.is_applicable_to_directive(directive):
+                    raise ValueError("[%d] Procedure %s is not applicable to the directive: %s" %
+                                     (extract.line, procedure.keyword(), directive.keyword()))
+
+                if not procedure.validate(self.dummy_fs, extract.sub_extract):
+                    raise ValueError("[%d] Procedure %s cannot take the values: %s" %
+                                     (extract.line, procedure.keyword(),
+                                      str(extract.sub_extract.tokens)))
+
+        return True
+
+    def run(self):
+        pass
 
     def process_line(self, line):
         """
@@ -62,6 +95,9 @@ class FSDirector(object):
         :param line:        the line of code to process.
         :return:            a tuple with (directive, procedure, extract)
         """
+        if line[0] == '#':
+            return None
+
         extract = self.extract_directive(line)
         directive = self.match_directive(extract)
 
@@ -69,7 +105,7 @@ class FSDirector(object):
         if extract.sub_extract:
             procedure = self.match_procedure(extract.sub_extract)
 
-        self.cached.append((directive, procedure, extract))
+        self.cache.append((directive, procedure, extract))
 
     def extract_directive(self, source):
         """
@@ -88,9 +124,9 @@ class FSDirector(object):
             if m.group(3):
                 sub_extract = self.extract_procedure(m.group(3))
 
-            return Extract(keyword, files, sub_extract)
+            return Extract(keyword, files, self.current_line, sub_extract=sub_extract)
 
-        raise SyntaxError("Wrong line: " + source)
+        raise SyntaxError("[%d] Wrong line: %s" % (self.current_line, source))
 
     def extract_procedure(self, source):
         """
@@ -108,7 +144,7 @@ class FSDirector(object):
             if m.group(3):
                 args.append(self.catch_lines())
 
-            return Extract(keyword, args)
+            return Extract(keyword, args, self.current_line)
 
         return None
 
@@ -193,7 +229,7 @@ class FSDirector(object):
             if directive.keyword() == extract.keyword:
                 return directive
 
-        raise ValueError("Not a valid directive: " + extract.keyword)
+        raise ValueError("[%d] Not a valid directive: %s" % (extract.line, extract.keyword))
 
     def match_procedure(self, extract):
         """
@@ -208,7 +244,7 @@ class FSDirector(object):
             if procedure.keyword() == extract.keyword:
                 return procedure
 
-        raise ValueError("Not a valid procedure: " + extract.keyword)
+        raise ValueError("[%d] Not a valid procedure: %s" % (extract.line, extract.keyword))
 
     def load_procedure(self, procedure):
         """

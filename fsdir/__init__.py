@@ -1,4 +1,4 @@
 import core
-import FSDirector
+import fsdirector
 import directives
 import procedures
