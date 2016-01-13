@@ -98,7 +98,7 @@ class FSDirector(object):
         """
         Run the director as a sandbox test.
         """
-        self.start_sandbox_dir()
+        self.begin_sandbox_dir()
 
         self.dummy_fs.begin_sandbox(self.sandbox_dir)
 
@@ -174,7 +174,8 @@ class FSDirector(object):
 
     def catch_lines(self):
         """
-        Catches all lines until the multi-line ending "}".
+        Catches all lines until the multi-line ending "}". This captures the padding (amount
+        of blank space) of the first line, and removes it from each line.
 
         :return:    a list with all lines.
         """
@@ -182,10 +183,11 @@ class FSDirector(object):
 
         line = self.request_line()
 
-        # find padding of the line.
+        # find padding of the first line.
         padding = self.find_padding(line)
 
         while line != "}":
+            # apply the padding to each line.
             if line.startswith(padding):
                 line = line[len(padding):]
 
@@ -308,12 +310,23 @@ class FSDirector(object):
         """
         self.directives.append(directive())
 
-    def start_sandbox_dir(self):
+    def begin_sandbox_dir(self):
+        """
+        Prepares the sandbox directory.
+
+        :return:
+        """
         if os.path.exists(self.sandbox_dir):
             shutil.rmtree(self.sandbox_dir)
 
         os.mkdir(self.sandbox_dir)
 
-    def stop_sandbox_dir(self):
+    def end_sandbox_dir(self):
         if os.path.exists(self.sandbox_dir):
-            os.rmdir(self.sandbox_dir)
+            shutil.rmtree(self.sandbox_dir)
+
+    def apply(self):
+        if not os.path.exists(self.sandbox_dir):
+            raise ValueError("Sandbox directory does not exists, call sandbox_run() first.")
+
+        self.end_sandbox_dir()

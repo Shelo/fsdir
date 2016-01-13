@@ -23,7 +23,7 @@ try:
     # sandbox run it.
     director.sandbox_run()
 
-    # run it.
-    director.run()
+    # apply the sandbox.
+    # director.apply()
 except ValueError as e:
     print e.message

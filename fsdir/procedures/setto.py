@@ -32,3 +32,6 @@ class SetTo(Procedure):
         for index, line in enumerate(directive.file):
             if matcher.match(line):
                 directive.file[index] = replacement
+
+                if line[-1] == '\n':
+                    directive.file[index] += '\n'
