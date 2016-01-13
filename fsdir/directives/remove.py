@@ -1,9 +1,8 @@
 from fsdir.core import Directive
-import os
 
 
 class Remove(Directive):
-    def validate(self, dummy_fs, extract):
+    def validate(self, dummy_fs, extract, procedure):
         """
         Validates that all files passed already exist. There should not be blank strings.
 
@@ -23,5 +22,5 @@ class Remove(Directive):
 
         return True
 
-    def run(self, dummy_fs, extract):
+    def run(self, dummy_fs, extract, procedure):
         pass

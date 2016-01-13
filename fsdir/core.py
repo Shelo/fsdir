@@ -1,20 +1,41 @@
 import os
+import shutil
 
 
 class DummyFileSystem(object):
+    """
+    The dummy file system is a file system resource manager that has the ability to fake
+    transactions, using sandbox, so that the directives and procedures can work without
+    knowing that, and so, don't repeat code, allow for safety, less errors, and more.
+    """
+
     def __init__(self):
         self.temp_files = []
         self._prefix = ""
         self._sandbox = False
 
-    def set_prefix(self, prefix):
-        self._prefix = prefix
-        self._sandbox = True if prefix else False
+    def begin_sandbox(self, sb_dir):
+        """
+        Start the dummy file system using a sandbox directory.
+
+        :param sb_dir:
+        """
+        self._prefix = sb_dir
+        self._sandbox = True
+
+    def end_sandbox(self):
+        """
+        Stops the sandbox behavior.
+
+        :return:
+        """
+        self._prefix = ""
+        self._sandbox = False
 
     def is_sandbox(self):
         return self._sandbox
 
-    def append(self, file_path):
+    def register_file(self, file_path):
         self.temp_files.append(file_path)
 
     def isfile(self, file_path):
@@ -24,19 +45,32 @@ class DummyFileSystem(object):
         return os.path.exists(file_path) or file_path in self.temp_files
 
     def get_canonical_path(self, file_path):
+        """
+        The canonical path is a path represented using this DummyFileSystem current state.
+
+        :param file_path:       the path to be converted.
+        :return:                the canonical path.
+        """
         return os.path.join(self._prefix, file_path)
 
-    def open_file(self, file_path):
-        path = self.get_canonical_path(file_path)
+    def open_file(self, file_path, mode="r"):
+        canonical_path = self.get_canonical_path(file_path)
 
-        basedir = os.path.dirname(path)
+        basedir = os.path.dirname(canonical_path)
         if not os.path.exists(basedir):
             os.makedirs(basedir)
 
-        return open(path, "w+")
+        if self.is_sandbox():
+            shutil.copy(file_path, canonical_path)
+
+        return open(canonical_path, mode)
 
     def create_file(self, file_path):
-        self.open_file(file_path).close()
+        # add a second security.
+        if os.path.isfile(file_path):
+            raise ValueError("Creation failed: %s already exists." % file_path)
+
+        self.open_file(file_path, mode="w").close()
 
 
 class Instruction(object):
@@ -51,11 +85,14 @@ class Directive(Instruction):
     """
     Directives are instructions that can work with files.
     """
-    def validate(self, dummy_fs, extract):
+    def validate(self, dummy_fs, extract, procedure):
         raise NotImplementedError
 
-    def run(self, dummy_fs, extract):
+    def run(self, dummy_fs, extract, procedure):
         raise NotImplementedError
+
+    def call_procedure(self, procedure, dummy_fs, extract):
+        procedure.run(dummy_fs, self, extract.sub_extract)
 
 
 class Procedure(Instruction):

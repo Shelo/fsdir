@@ -3,7 +3,7 @@ import os
 
 
 class Read(Directive):
-    def validate(self, dummy_fs, extract):
+    def validate(self, dummy_fs, extract, procedure):
         if len(extract.tokens) != 1:
             return False
 
@@ -14,5 +14,5 @@ class Read(Directive):
 
         return False
 
-    def run(self, dummy_fs, extract):
+    def run(self, dummy_fs, extract, procedure):
         pass

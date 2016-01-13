@@ -1,15 +1,4 @@
-CREATE 'example/target/dummy_file.md'
-
-CREATE 'example/target/a_new_file.md'
-
-EDIT 'example/target/a_new_file.md' APPEND (Hello!)
-
-CREATE 'example/target/dummy_file_2.md'
-
-READ 'example/target/a_new_file.md' COPYTO (example/target/dummy_file_2.md)
-
-EDIT 'example/target/a_new_file.md' SETTO (Hello, world!) {
+EDIT 'target/dummy_file.md' SETTO (Hello, world!) {
+    Esto es español carajo:
     Hola, mundo!
 }
-
-REMOVE 'example/target/dummy_file.md'

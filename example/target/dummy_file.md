@@ -1,1 +1,1 @@
-Just a dummy file.
+Hello, world!

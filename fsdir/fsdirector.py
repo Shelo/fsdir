@@ -72,9 +72,10 @@ class FSDirector(object):
         :return:
         """
         for directive, procedure, extract in self.cache:
-            if not directive.validate(self.dummy_fs, extract):
-                raise ValueError("[%d] Directive %s cannot take the values: %s" %
-                                 (extract.line, directive.keyword(), str(extract.tokens)))
+            if not directive.validate(self.dummy_fs, extract, procedure):
+                raise ValueError("[%d] Directive %s cannot take the values: %s (%s)" %
+                                 (extract.line, directive.keyword(), str(extract.tokens),
+                                  extract.error))
 
             if procedure:
                 self.validate_procedure(procedure, directive, extract.sub_extract)
@@ -94,18 +95,18 @@ class FSDirector(object):
         pass
 
     def sandbox_run(self):
-        temp_dir = self.get_temp_dir()
+        """
+        Run the director as a sandbox test.
+        """
+        self.start_sandbox_dir()
 
-        self.dummy_fs.set_prefix(self.sandbox_dir)
+        self.dummy_fs.begin_sandbox(self.sandbox_dir)
 
         for directive, procedure, extract in self.cache:
-            directive.run(self.dummy_fs, extract)
+            directive.run(self.dummy_fs, extract, procedure)
 
-            if procedure:
-                procedure.run(self.dummy_fs, directive, extract)
-
-        # just for development stages.
-        # self.remove_temp_dir()
+        # TODO: just for development stages.
+        # self.stop_sandbox_dir()
 
     def process_line(self, line):
         """
@@ -125,7 +126,10 @@ class FSDirector(object):
         if extract.sub_extract:
             procedure = self.match_procedure(extract.sub_extract)
 
-        self.cache.append((directive, procedure, extract))
+        # append the cached instruction, creating a directive and a procedure
+        # for it.
+        self.cache.append((directive.__class__(), procedure.__class__() if procedure else None,
+                           extract))
 
     def extract_directive(self, source):
         """
@@ -177,11 +181,31 @@ class FSDirector(object):
         lines = []
 
         line = self.request_line()
+
+        # find padding of the line.
+        padding = self.find_padding(line)
+
         while line != "}":
+            if line.startswith(padding):
+                line = line[len(padding):]
+
             lines.append(line)
             line = self.request_line()
 
         return lines
+
+    @staticmethod
+    def find_padding(line):
+        padding = 0
+
+        if line != "}" and len(line) != 0:
+            for c in line:
+                if c == ' ' or c == '\t':
+                    padding += 1
+                else:
+                    break
+
+        return line[:padding]
 
     def request_line(self):
         """
@@ -284,13 +308,12 @@ class FSDirector(object):
         """
         self.directives.append(directive())
 
-    def get_temp_dir(self):
+    def start_sandbox_dir(self):
         if os.path.exists(self.sandbox_dir):
             shutil.rmtree(self.sandbox_dir)
 
         os.mkdir(self.sandbox_dir)
-        return self.sandbox_dir
 
-    def remove_temp_dir(self):
+    def stop_sandbox_dir(self):
         if os.path.exists(self.sandbox_dir):
             os.rmdir(self.sandbox_dir)
