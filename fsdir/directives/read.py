@@ -14,5 +14,8 @@ class Read(Directive):
 
         return False
 
-    def run(self, dummy_fs, extract, procedure):
+    def begin(self, dummy_fs, extract):
+        pass
+
+    def end(self, dummy_fs, extract):
         pass

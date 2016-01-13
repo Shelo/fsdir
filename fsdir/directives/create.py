@@ -15,6 +15,9 @@ class Create(Directive):
 
         return True
 
-    def run(self, dummy_fs, extract, procedure):
+    def begin(self, dummy_fs, extract):
         for file_path in extract.tokens:
             dummy_fs.create_file(file_path)
+
+    def end(self, dummy_fs, extract):
+        pass
