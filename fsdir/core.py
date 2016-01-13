@@ -88,11 +88,11 @@ class Directive(Instruction):
     def validate(self, dummy_fs, extract, procedure):
         raise NotImplementedError
 
-    def run(self, dummy_fs, extract, procedure):
+    def begin(self, dummy_fs, extract):
         raise NotImplementedError
 
-    def call_procedure(self, procedure, dummy_fs, extract):
-        procedure.run(dummy_fs, self, extract.sub_extract)
+    def end(self, dummy_fs, extract):
+        raise NotImplementedError
 
 
 class Procedure(Instruction):

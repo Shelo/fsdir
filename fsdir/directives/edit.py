@@ -6,19 +6,13 @@ class Edit(Directive):
     def __init__(self):
         super(Edit, self).__init__()
 
-        self.file = []
+        self.lines = []
 
     def validate(self, dummy_fs, extract, procedure):
         """
-
-
-        :type dummy_fs: DummyFileSystem
-        :type extract: Extract
-
-        :param dummy_fs:
-        :param extract:
-
-        :return:
+        Always validate that the file already exists or has been created
+        previously, also, this always has to be called with a procedure, by it self, this
+        does nothing meaningful.
         """
         for file_path in extract.tokens:
             # should validate that the file actually exists.
@@ -32,7 +26,7 @@ class Edit(Directive):
 
         return True
 
-    def run(self, dummy_fs, extract, procedure):
+    def begin(self, dummy_fs, extract):
         """
         :type dummy_fs: DummyFileSystem
         :type extract: Extract
@@ -40,12 +34,14 @@ class Edit(Directive):
         # read the file's content.
         with dummy_fs.open_file(extract.tokens[0]) as source:
             for line in source:
-                self.file.append(line)
+                self.lines.append(line)
 
-        # call the procedure with the file.
-        self.call_procedure(procedure, dummy_fs, extract)
-
+    def end(self, dummy_fs, extract):
+        """
+        :type dummy_fs: DummyFileSystem
+        :type extract: Extract
+        """
         # save the new file.
         with dummy_fs.open_file(extract.tokens[0], "w+") as source:
-            for line in self.file:
+            for line in self.lines:
                 source.write(line)

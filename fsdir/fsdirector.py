@@ -103,7 +103,12 @@ class FSDirector(object):
         self.dummy_fs.begin_sandbox(self.sandbox_dir)
 
         for directive, procedure, extract in self.cache:
-            directive.run(self.dummy_fs, extract, procedure)
+            directive.begin(self.dummy_fs, extract)
+
+            if procedure:
+                procedure.run(self.dummy_fs, directive, extract.sub_extract)
+
+            directive.end(self.dummy_fs, extract)
 
         # TODO: just for development stages.
         # self.stop_sandbox_dir()
@@ -327,6 +332,6 @@ class FSDirector(object):
 
     def apply(self):
         if not os.path.exists(self.sandbox_dir):
-            raise ValueError("Sandbox directory does not exists, call sandbox_run() first.")
+            raise AssertionError("Sandbox directory does not exists, call sandbox_run() first.")
 
         self.end_sandbox_dir()

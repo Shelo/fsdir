@@ -29,9 +29,9 @@ class SetTo(Procedure):
         replacement = "\n".join(extract.tokens[1]) if type(extract.tokens[1] == list) \
             else extract.tokens[1]
 
-        for index, line in enumerate(directive.file):
+        for index, line in enumerate(directive.lines):
             if matcher.match(line):
-                directive.file[index] = replacement
+                directive.lines[index] = replacement
 
                 if line[-1] == '\n':
-                    directive.file[index] += '\n'
+                    directive.lines[index] += '\n'
