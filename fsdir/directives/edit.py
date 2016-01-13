@@ -11,5 +11,5 @@ class Edit(Directive):
 
         return True
 
-    def run(self, extract):
+    def run(self, dummy_fs, extract):
         pass

@@ -10,5 +10,5 @@ class Append(Procedure):
         # there's nothing that we couldn't append.
         return True
 
-    def run(self, extract):
+    def run(self, dummy_fs, directive, extract):
         pass

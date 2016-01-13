@@ -15,5 +15,6 @@ class Create(Directive):
 
         return True
 
-    def run(self, extract):
-        pass
+    def run(self, dummy_fs, extract):
+        for file_path in extract.tokens:
+            dummy_fs.create_file(file_path)

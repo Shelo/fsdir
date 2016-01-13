@@ -1,5 +1,7 @@
 import re
 from fsdir.core import DummyFileSystem
+import os
+import shutil
 
 
 class Extract(object):
@@ -21,6 +23,8 @@ class FSDirector(object):
 
     directive_regex = re.compile("([A-Z]+) *((?:'[^']*' *)+) *(.*)")
     procedure_regex = re.compile("([A-Z]+) *( *\(.*\) *)* *(\{?)")
+
+    sandbox_dir = ".sandbox"
 
     def __init__(self):
         self.cache = []
@@ -73,19 +77,35 @@ class FSDirector(object):
                                  (extract.line, directive.keyword(), str(extract.tokens)))
 
             if procedure:
-                if not procedure.is_applicable_to_directive(directive):
-                    raise ValueError("[%d] Procedure %s is not applicable to the directive: %s" %
-                                     (extract.line, procedure.keyword(), directive.keyword()))
-
-                if not procedure.validate(self.dummy_fs, extract.sub_extract):
-                    raise ValueError("[%d] Procedure %s cannot take the values: %s" %
-                                     (extract.line, procedure.keyword(),
-                                      str(extract.sub_extract.tokens)))
+                self.validate_procedure(procedure, directive, extract.sub_extract)
 
         return True
 
+    def validate_procedure(self, procedure, directive, extract):
+        if not procedure.is_applicable_to_directive(directive):
+            raise ValueError("[%d] Procedure %s is not applicable to the directive: %s" %
+                             (extract.line, procedure.keyword(), directive.keyword()))
+
+        if not procedure.validate(self.dummy_fs, extract):
+            raise ValueError("[%d] Procedure %s cannot take the values: %s" %
+                             (extract.line, procedure.keyword(), str(extract.tokens)))
+
     def run(self):
         pass
+
+    def sandbox_run(self):
+        temp_dir = self.get_temp_dir()
+
+        self.dummy_fs.set_prefix(self.sandbox_dir)
+
+        for directive, procedure, extract in self.cache:
+            directive.run(self.dummy_fs, extract)
+
+            if procedure:
+                procedure.run(self.dummy_fs, directive, extract)
+
+        # just for development stages.
+        # self.remove_temp_dir()
 
     def process_line(self, line):
         """
@@ -263,3 +283,14 @@ class FSDirector(object):
         :return:
         """
         self.directives.append(directive())
+
+    def get_temp_dir(self):
+        if os.path.exists(self.sandbox_dir):
+            shutil.rmtree(self.sandbox_dir)
+
+        os.mkdir(self.sandbox_dir)
+        return self.sandbox_dir
+
+    def remove_temp_dir(self):
+        if os.path.exists(self.sandbox_dir):
+            os.rmdir(self.sandbox_dir)

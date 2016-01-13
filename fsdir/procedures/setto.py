@@ -10,6 +10,8 @@ class SetTo(Procedure):
         """
         Should always receive two tokens, the first one always has to be non-blank, while the
         second one could be anything. List for multi-line and string for single line.
+
+        :param dummy_fs:
         :param extract:
         :return:
         """
@@ -21,5 +23,5 @@ class SetTo(Procedure):
 
         return True
 
-    def run(self, extract):
+    def run(self, dummy_fs, directive, extract):
         pass

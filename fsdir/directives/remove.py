@@ -7,8 +7,8 @@ class Remove(Directive):
         """
         Validates that all files passed already exist. There should not be blank strings.
 
+        :param dummy_fs:
         :param extract:
-        :param temp_files:
         :return:
         """
         if len(extract.tokens) == 0:
@@ -23,5 +23,5 @@ class Remove(Directive):
 
         return True
 
-    def run(self, extract):
+    def run(self, dummy_fs, extract):
         pass

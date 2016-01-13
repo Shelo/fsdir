@@ -19,5 +19,5 @@ class CopyTo(Procedure):
 
         return True
 
-    def run(self, extract):
+    def run(self, dummy_fs, directive, extract):
         pass
