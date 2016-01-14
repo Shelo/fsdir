@@ -7,6 +7,8 @@ class DummyFileSystem(object):
     The dummy file system is a file system resource manager that has the ability to fake
     transactions, using sandbox, so that the directives and procedures can work without
     knowing that, and so, don't repeat code, allow for safety, less errors, and more.
+
+    Basically, this is a layer of abstraction.
     """
 
     def __init__(self):
@@ -71,6 +73,10 @@ class DummyFileSystem(object):
             raise ValueError("Creation failed: %s already exists." % file_path)
 
         self.open_file(file_path, mode="w").close()
+
+    def chmod(self, file_path, mode):
+        self.open_file(file_path).close()
+        os.chmod(self.get_canonical_path(file_path), mode)
 
 
 class Instruction(object):

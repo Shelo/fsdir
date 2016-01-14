@@ -29,9 +29,13 @@ class SetTo(Procedure):
         replacement = "\n".join(extract.tokens[1]) if type(extract.tokens[1] == list) \
             else extract.tokens[1]
 
-        for index, line in enumerate(directive.lines):
+        for lines in directive.files:
+            self.find_and_replace(lines, matcher, replacement)
+
+    def find_and_replace(self, lines, matcher, replacement):
+        for index, line in enumerate(lines):
             if matcher.match(line):
-                directive.lines[index] = replacement
+                lines[index] = replacement
 
                 if line[-1] == '\n':
-                    directive.lines[index] += '\n'
+                    lines[index] += '\n'

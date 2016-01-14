@@ -1,4 +1,7 @@
-EDIT 'target/dummy_file.md' SETTO (Hello, world!) {
+FILE 'target/ch_file.md' CHMOD (755)
+
+# will replace every Hello. [Ww]orld! in each file edited.
+EDIT 'target/dummy_file.md' 'target/dummy_file_2.md' SETTO (Hello. [wW]orld!) {
     Esto es español carajo:
     Hola, mundo!
 }

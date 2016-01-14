@@ -6,7 +6,7 @@ class Edit(Directive):
     def __init__(self):
         super(Edit, self).__init__()
 
-        self.lines = []
+        self.files = []
 
     def validate(self, dummy_fs, extract, procedure):
         """
@@ -17,7 +17,7 @@ class Edit(Directive):
         for file_path in extract.tokens:
             # should validate that the file actually exists.
             if not file_path or not dummy_fs.isfile(file_path):
-                extract.error = "File does not exists."
+                extract.error = "File %s does not exists." % file_path
                 return False
 
         if not procedure:
@@ -32,9 +32,14 @@ class Edit(Directive):
         :type extract: Extract
         """
         # read the file's content.
-        with dummy_fs.open_file(extract.tokens[0]) as source:
-            for line in source:
-                self.lines.append(line)
+        for file_path in extract.tokens:
+            lines = []
+
+            with dummy_fs.open_file(file_path) as source:
+                for line in source:
+                    lines.append(line)
+
+            self.files.append(lines)
 
     def end(self, dummy_fs, extract):
         """
@@ -42,6 +47,9 @@ class Edit(Directive):
         :type extract: Extract
         """
         # save the new file.
-        with dummy_fs.open_file(extract.tokens[0], "w+") as source:
-            for line in self.lines:
-                source.write(line)
+        for i, file_path in enumerate(extract.tokens):
+            lines = self.files[i]
+
+            with dummy_fs.open_file(file_path, "w+") as source:
+                for line in lines:
+                    source.write(line)
