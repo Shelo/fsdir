@@ -15,15 +15,22 @@ class Read(Directive):
 
     def validate(self, dummy_fs, extract, procedure):
         """
-        Validate that there's only one file, and that file actually exists.
+        Validate that there's only one file, and that file actually exists. Also, this alwasys
+        has to be called with a procedure.
         """
         if len(extract.tokens) != 1:
+            extract.error = "needs one file as argument"
             return False
 
-        if dummy_fs.isfile(extract.tokens[0]):
-            return True
+        if not dummy_fs.isfile(extract.tokens[0]):
+            extract.error = "the file does no exists"
+            return False
 
-        return False
+        if not procedure:
+            extract.error = "should be called with a procedure"
+            return False
+
+        return True
 
     def begin(self, dummy_fs, extract):
         """

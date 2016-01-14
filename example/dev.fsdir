@@ -1,7 +1,18 @@
 FILE 'target/ch_file.md' CHMOD (755)
 
+EDIT 'target/dummy_file.md' 'target/dummy_file_2.md' APPEND (Hola, mundo) {
+    Append more stuff!
+}
+
 # will replace every Hello. [Ww]orld! in each file edited.
-EDIT 'target/dummy_file.md' 'target/dummy_file_2.md' SETTO (Hello. [wW]orld!) {
+EDIT 'target/dummy_file.md' 'target/dummy_file_2.md' REPLACE (Hello. [wW]orld!) {
     Esto es español carajo:
     Hola, mundo!
 }
+
+EDIT 'target/dummy_file_2.md' SET {
+    Esto es español carajo:
+    Hola, mundo!
+}
+
+#READ 'target/dummy_file.md'

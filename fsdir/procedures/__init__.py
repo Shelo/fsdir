@@ -1,4 +1,5 @@
 from append import Append
 from copyto import CopyTo
-from setto import SetTo
+from replace import Replace
 from chmod import ChMod
+from set import Set

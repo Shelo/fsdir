@@ -3,7 +3,7 @@ import fsdir.directives
 import re
 
 
-class SetTo(Procedure):
+class Replace(Procedure):
     def is_applicable_to_directive(self, directive):
         return directive.__class__ == fsdir.directives.Edit
 

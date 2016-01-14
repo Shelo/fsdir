@@ -48,7 +48,7 @@ class DummyFileSystem(object):
 
     def get_canonical_path(self, file_path):
         """
-        The canonical path is a path represented using this DummyFileSystem current state.
+        The canonical path is a path that considers the current state of this file system.
 
         :param file_path:       the path to be converted.
         :return:                the canonical path.
@@ -62,7 +62,8 @@ class DummyFileSystem(object):
         if not os.path.exists(basedir):
             os.makedirs(basedir)
 
-        if self.is_sandbox():
+        # check that the file was not previously copied.
+        if not os.path.isfile(canonical_path):
             shutil.copy(file_path, canonical_path)
 
         return open(canonical_path, mode)

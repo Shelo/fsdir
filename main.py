@@ -12,7 +12,8 @@ director.load_directive(fsdir.directives.File)
 
 director.load_procedure(fsdir.procedures.Append)
 director.load_procedure(fsdir.procedures.CopyTo)
-director.load_procedure(fsdir.procedures.SetTo)
+director.load_procedure(fsdir.procedures.Replace)
+director.load_procedure(fsdir.procedures.Set)
 director.load_procedure(fsdir.procedures.ChMod)
 
 # load the fsdir script.

@@ -168,7 +168,11 @@ class FSDirector(object):
 
         if m:
             keyword = m.group(1)
-            args = self.read_procedure_args(m.group(2))
+
+            args = []
+
+            if m.group(2):
+                args = self.read_procedure_args(m.group(2))
 
             if m.group(3):
                 args.append(self.catch_lines())
