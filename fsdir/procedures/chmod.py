@@ -20,7 +20,7 @@ class ChMod(Procedure):
 
     def run(self, dummy_fs, directive, extract):
         """
-        Change very file in the directive to the needed mode.
+        Change every file in the directive to the needed mode.
         """
         for file_path in directive.files:
             dummy_fs.chmod(file_path, int(extract.tokens[0], 8))
