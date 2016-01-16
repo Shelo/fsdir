@@ -1,3 +1,4 @@
+import collections
 import os
 import shutil
 
@@ -101,6 +102,12 @@ class Directive(Instruction):
     def end(self, dummy_fs, extract):
         raise NotImplementedError
 
+    def next(self):
+        raise NotImplementedError
+
+    def repeat_each_file(self):
+        raise NotImplementedError
+
 
 class Procedure(Instruction):
     """
@@ -113,4 +120,46 @@ class Procedure(Instruction):
         raise NotImplementedError
 
     def run(self, dummy_fs, directive, extract):
+        raise NotImplementedError
+
+
+class IterativeDirective(Directive):
+    def __init__(self):
+        super(IterativeDirective, self).__init__()
+
+        self.__iterable = []
+        self.index = -1
+        self.item = None
+
+    def append(self, item):
+        self.__iterable.append(item)
+
+    def repeat_each_file(self):
+        return True
+
+    def next(self):
+        self.index += 1
+        self.item = self.__iterable[self.index]
+        return self.item
+
+    def restart(self):
+        self.item = None
+        self.index = -1
+
+    def get_current(self):
+        return self.item
+
+    def get_index(self):
+        return self.index
+
+    def set(self, index, value):
+        self.__iterable[index] = value
+
+    def end(self, dummy_fs, extract):
+        raise NotImplementedError
+
+    def validate(self, dummy_fs, extract, procedure):
+        raise NotImplementedError
+
+    def begin(self, dummy_fs, extract):
         raise NotImplementedError

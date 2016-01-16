@@ -22,5 +22,4 @@ class ChMod(Procedure):
         """
         Change every file in the directive to the needed mode.
         """
-        for file_path in directive.files:
-            dummy_fs.chmod(file_path, int(extract.tokens[0], 8))
+        dummy_fs.chmod(directive.get_current(), int(extract.tokens[0], 8))

@@ -1,12 +1,10 @@
-from fsdir.core import Directive, DummyFileSystem
+from fsdir.core import IterativeDirective, DummyFileSystem
 from fsdir.fsdirector import Extract
 
 
-class Edit(Directive):
+class Edit(IterativeDirective):
     def __init__(self):
         super(Edit, self).__init__()
-
-        self.files = []
 
     def validate(self, dummy_fs, extract, procedure):
         """
@@ -39,7 +37,7 @@ class Edit(Directive):
                 for line in source:
                     lines.append(line)
 
-            self.files.append(lines)
+            self.append(lines)
 
     def end(self, dummy_fs, extract):
         """
@@ -47,8 +45,9 @@ class Edit(Directive):
         :type extract: Extract
         """
         # save the new file.
+        self.restart()
         for i, file_path in enumerate(extract.tokens):
-            lines = self.files[i]
+            lines = self.next()
 
             with dummy_fs.open_file(file_path, "w+") as source:
                 for line in lines:

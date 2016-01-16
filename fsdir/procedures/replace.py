@@ -4,6 +4,11 @@ import re
 
 
 class Replace(Procedure):
+    def __init__(self):
+        super(Replace, self).__init__()
+
+        self.matcher = None
+
     def is_applicable_to_directive(self, directive):
         return directive.__class__ == fsdir.directives.Edit
 
@@ -24,15 +29,18 @@ class Replace(Procedure):
         """
         Search for all matches in the source file and replaces them.
         """
-        matcher = re.compile(extract.tokens[0])
+        if not self.matcher:
+            self.matcher = re.compile(extract.tokens[0])
 
         replacement = "\n".join(extract.tokens[1]) if type(extract.tokens[1] == list) \
             else extract.tokens[1]
 
-        for lines in directive.files:
-            self.find_and_replace(lines, matcher, replacement)
+        lines = directive.get_current()
 
-    def find_and_replace(self, lines, matcher, replacement):
+        self.find_and_replace(lines, self.matcher, replacement)
+
+    @staticmethod
+    def find_and_replace(lines, matcher, replacement):
         for index, line in enumerate(lines):
             if matcher.match(line):
                 lines[index] = replacement

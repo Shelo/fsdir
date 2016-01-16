@@ -11,9 +11,10 @@ class Append(Procedure):
         return True
 
     def run(self, dummy_fs, directive, extract):
-        for lines in directive.files:
-            for arg in extract.tokens:
-                if type(arg) == list:
-                    lines.append('\n'.join(arg) + "\n")
-                else:
-                    lines.append(arg + "\n")
+        lines = directive.get_current()
+
+        for arg in extract.tokens:
+            if type(arg) == list:
+                lines.append('\n'.join(arg) + "\n")
+            else:
+                lines.append(arg + "\n")

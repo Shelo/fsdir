@@ -106,12 +106,20 @@ class FSDirector(object):
             directive.begin(self.dummy_fs, extract)
 
             if procedure:
-                procedure.run(self.dummy_fs, directive, extract.sub_extract)
+                self._run_procedure(directive, procedure, extract)
 
             directive.end(self.dummy_fs, extract)
 
         # TODO: just for development stages.
         # self.stop_sandbox_dir()
+
+    def _run_procedure(self, directive, procedure, extract):
+        if directive.repeat_each_file():
+            for file in extract.tokens:
+                directive.next()
+                procedure.run(self.dummy_fs, directive, extract.sub_extract)
+        else:
+            procedure.run(self.dummy_fs, directive, extract.sub_extract)
 
     def process_line(self, line):
         """

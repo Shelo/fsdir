@@ -22,8 +22,9 @@ class Set(Procedure):
         """
         replacement = extract.tokens[0]
 
-        for i in range(len(directive.files)):
-            if type(replacement) == list:
-                directive.files[i] = '\n'.join(replacement)
-            else:
-                directive.files[i] = replacement
+        index = directive.get_index()
+
+        if type(replacement) == list:
+            directive.set(index, '\n'.join(replacement))
+        else:
+            directive.set(index, replacement)

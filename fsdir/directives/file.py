@@ -1,15 +1,14 @@
-from fsdir.core import Directive
+from fsdir.core import IterativeDirective
 
 
-class File(Directive):
-    def __init__(self):
-        super(File, self).__init__()
-
-        self.files = []
-
+class File(IterativeDirective):
     """
     Base directive that simply selects a file (or files) to pass it to a procedure.
     """
+
+    def __init__(self):
+        super(File, self).__init__()
+
     def validate(self, dummy_fs, extract, procedure):
         for file_path in extract.tokens:
             if not dummy_fs.isfile(file_path):
@@ -20,7 +19,7 @@ class File(Directive):
 
     def begin(self, dummy_fs, extract):
         for file_path in extract.tokens:
-            self.files.append(file_path)
+            self.append(file_path)
 
     def end(self, dummy_fs, extract):
         pass

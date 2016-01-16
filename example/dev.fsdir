@@ -1,4 +1,4 @@
-FILE 'target/ch_file.md' CHMOD (755)
+FILE 'target/ch_file.md' 'target/dummy_file.md' CHMOD (777)
 
 EDIT 'target/dummy_file.md' 'target/dummy_file_2.md' APPEND (Hola, mundo) {
     Append more stuff!
@@ -15,4 +15,4 @@ EDIT 'target/dummy_file_2.md' SET {
     Hola, mundo!
 }
 
-#READ 'target/dummy_file.md'
+# READ 'target/dummy_file.md'
