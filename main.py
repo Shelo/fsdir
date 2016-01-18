@@ -1,9 +1,11 @@
 import fsdir
+import sys
 
 # SFSCL: Structured File System Config Language
 
 director = fsdir.fsdirector.FSDirector()
 
+# load plugins.
 director.load_directive(fsdir.directives.Edit)
 director.load_directive(fsdir.directives.Create)
 director.load_directive(fsdir.directives.Read)
@@ -16,15 +18,24 @@ director.load_procedure(fsdir.procedures.Replace)
 director.load_procedure(fsdir.procedures.Set)
 director.load_procedure(fsdir.procedures.ChMod)
 
-# load the fsdir script.
-director.load("dev.fsdir")
+# EXAMPLE AS TERMINAL COMMAND:
+# load the fsdir script from argv.
+# this will automatically run the validation and sandbox.
+director.load_argv()
+
+# load the script form file.
+# director.load("dev.fsdir")
+
+# load the script form string.
+# director.load("FILE 'target/ch_file.md' 'target/dummy_file.md' CHMOD (777)")
 
 try:
+    pass
     # validate the script.
-    director.validate()
+    # director.validate()
 
     # sandbox run it.
-    director.sandbox_run()
+    # director.sandbox_run()
 
     # apply the sandbox.
     # director.apply()

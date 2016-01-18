@@ -1,7 +1,12 @@
 import re
+
+import sys
+
 from fsdir.core import DummyFileSystem
 import os
 import shutil
+import argparse
+import util.treedisplay
 
 
 class Extract(object):
@@ -36,6 +41,8 @@ class FSDirector(object):
         self.current_line = 0
 
         self.dummy_fs = DummyFileSystem()
+
+        self.display = False
 
     def load(self, file_path):
         """
@@ -112,6 +119,8 @@ class FSDirector(object):
 
         # TODO: just for development stages.
         # self.stop_sandbox_dir()
+
+        self.post_process()
 
     def _run_procedure(self, directive, procedure, extract):
         if directive.repeat_each_file():
@@ -342,8 +351,59 @@ class FSDirector(object):
         if os.path.exists(self.sandbox_dir):
             shutil.rmtree(self.sandbox_dir)
 
-    def apply(self):
+    def apply(self, keep=False):
         if not os.path.exists(self.sandbox_dir):
             raise AssertionError("Sandbox directory does not exists, call sandbox_run() first.")
 
-        self.end_sandbox_dir()
+        if not keep:
+            self.end_sandbox_dir()
+
+    def config_argv(self):
+        parser = argparse.ArgumentParser(description="FileSystem Director")
+
+        parser.add_argument('file', help='Input file')
+        parser.add_argument('-s', '--sandbox', help='Change the default sandbox dir')
+        parser.add_argument('-a', '--apply', help='Apply sandbox', action='store_true')
+        parser.add_argument('-d', '--display', help='Display the sandbox tree', action='store_true')
+        parser.add_argument('-t', '--test', help='Test the script', action='store_true')
+        parser.add_argument('-r', '--run', help='Run the script', action='store_true')
+        parser.add_argument('-k', '--keep', help='Keep the sandbox', action='store_true')
+        parser.add_argument('-b', '--backup', help='Backup before run', action='store_true')
+
+        args = parser.parse_args()
+
+        self.display = args.display
+
+        if args.sandbox:
+            self.sandbox_dir = args.sandbox
+
+        self.load(args.file)
+
+        if not args.test and not args.run and not args.apply:
+            if self.validate():
+                self.sandbox_run()
+
+        if args.test or args.run:
+            is_valid = self.validate()
+
+            if is_valid:
+                print "The script is valid."
+
+        if args.backup:
+            sys.stderr.write("Backup not supported yet.\n")
+
+        if args.run:
+            self.sandbox_run()
+
+        if args.apply:
+            self.apply(args.keep)
+
+    def load_argv(self):
+        self.config_argv()
+
+    def post_process(self):
+        if self.display:
+            self.display_sandbox()
+
+    def display_sandbox(self):
+        util.treedisplay.display(self.sandbox_dir)
