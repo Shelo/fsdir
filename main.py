@@ -23,7 +23,8 @@ director.load_procedure(fsdir.procedures.ChMod)
 # this will automatically run the validation and sandbox.
 director.load_argv()
 
-# load the script form file.
+# == EXAMPLE AS API ==
+# load the script from file.
 # director.load("dev.fsdir")
 
 # load the script form string.
