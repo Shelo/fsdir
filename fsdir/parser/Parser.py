@@ -1,3 +1,6 @@
+import os
+
+
 class Token(object):
     def __init__(self, position=0, length=0, type=0):
         self.position = position
@@ -20,12 +23,14 @@ class Tokenizer(object):
     TYPE_PARAMETER = 3
     TYPE_BLANK_SPACE = 4
     TYPE_TEXT_PARAMETER = 5
+    TYPE_COMMENT = 6
 
     CHAR_QUOTE = '\''
     CHAR_PARENTHESIS_LEFT = '('
     CHAR_PARENTHESIS_RIGHT = ')'
     CHAR_BRACE_LEFT = '{'
     CHAR_BRACE_RIGHT = '}'
+    CHAR_COMMENT = '#'
 
     def __init__(self, source):
         self.source = source
@@ -41,6 +46,16 @@ class Tokenizer(object):
     def process_command(self, c):
         data = TokenData()
 
+        self.switch_parser(c, data)
+        self.cursor += data.offset_start
+
+        if data.type != self.TYPE_IGNORE:
+            # do not include tokens that can be ignored.
+            self.tokens.append(Token(self.cursor, data.length, data.type))
+
+        self.cursor += data.length + data.offset_stop
+
+    def switch_parser(self, c, data):
         if c.isupper():
             self.parse_identifier(data)
         elif c.isspace():
@@ -51,16 +66,10 @@ class Tokenizer(object):
             self.parse_parameter(data)
         elif c == self.CHAR_BRACE_LEFT:
             self.parse_text_param(data)
+        elif c == self.CHAR_COMMENT:
+            self.parse_comment(data)
         else:
             raise ValueError("Wrong syntax: " + self.source[self.cursor:])
-
-        self.cursor += data.offset_start
-
-        if data.type != self.TYPE_IGNORE:
-            # do not include tokens that can be ignored.
-            self.tokens.append(Token(self.cursor, data.length, data.type))
-
-        self.cursor += data.length + data.offset_stop
 
     # - Parsers
     def parse_identifier(self, data):
@@ -125,6 +134,23 @@ class Tokenizer(object):
         data.offset_start = 1
         data.offset_stop = 1
 
+        if self.source[t_cursor + 1] == os.linesep:
+            data.offset_start += 1
+            data.length -= 1
+
+        if self.source[t_cursor - 1] == os.linesep:
+            data.offset_stop += 1
+            data.length -= 1
+
+    def parse_comment(self, data):
+        t_cursor = self.cursor + 1
+
+        while t_cursor < len(self.source) and self.source[t_cursor] != os.linesep:
+            t_cursor += 1
+
+        data.type = self.TYPE_COMMENT
+        data.length = t_cursor - self.cursor
+
 
 class ElementParser(object):
     pass
@@ -147,5 +173,6 @@ class Parser(object):
 
 if __name__ == '__main__':
     parser = Parser()
-    parser.parse_s("FILE 'example/target/ch_file.md' 'example/target/dummy_file.md' CHMOD {Hello}")
+    with open("example/dev.fsdir") as f:
+        parser.parse_s(f.read())
     parser.debug()
