@@ -1,4 +1,5 @@
 import os
+import inspect
 
 
 class Token(object):
@@ -24,6 +25,7 @@ class Tokenizer(object):
     TYPE_BLANK_SPACE = 4
     TYPE_TEXT_PARAMETER = 5
     TYPE_COMMENT = 6
+    TYPE_NEWLINE = 7
 
     CHAR_QUOTE = '\''
     CHAR_PARENTHESIS_LEFT = '('
@@ -31,6 +33,9 @@ class Tokenizer(object):
     CHAR_BRACE_LEFT = '{'
     CHAR_BRACE_RIGHT = '}'
     CHAR_COMMENT = '#'
+    CHAR_SPACE = ' '
+    CHAR_TAB = '\t'
+    CHAR_NEWLINE = os.linesep
 
     def __init__(self, source):
         self.source = source
@@ -58,7 +63,7 @@ class Tokenizer(object):
     def switch_parser(self, c, data):
         if c.isupper():
             self.parse_identifier(data)
-        elif c.isspace():
+        elif self.is_space(c):
             self.parse_space(data)
         elif c == self.CHAR_QUOTE:
             self.parse_file_path(data)
@@ -68,8 +73,28 @@ class Tokenizer(object):
             self.parse_text_param(data)
         elif c == self.CHAR_COMMENT:
             self.parse_comment(data)
+        elif c == self.CHAR_NEWLINE:
+            self.parse_newline(data)
         else:
             raise ValueError("Wrong syntax: " + self.source[self.cursor:])
+
+    # - Util
+    def is_space(self, c):
+        return c == self.CHAR_SPACE or c == self.CHAR_TAB
+
+    @staticmethod
+    def get_types():
+        types = {}
+
+        for name, value in inspect.getmembers(Tokenizer, lambda a: type(a) == int):
+            if name.startswith("TYPE"):
+                formatted = name.replace("TYPE_", "")
+                formatted = formatted.replace("_", " ")
+                formatted = formatted.title()
+
+                types[value] = formatted
+
+        return types
 
     # - Parsers
     def parse_identifier(self, data):
@@ -92,7 +117,7 @@ class Tokenizer(object):
         """
         t_cursor = self.cursor
 
-        while t_cursor < len(self.source) and self.source[t_cursor].isspace():
+        while t_cursor < len(self.source) and self.is_space(self.source[t_cursor]):
             t_cursor += 1
 
         data.type = self.TYPE_IGNORE
@@ -134,22 +159,31 @@ class Tokenizer(object):
         data.offset_start = 1
         data.offset_stop = 1
 
-        if self.source[t_cursor + 1] == os.linesep:
+        if self.source[t_cursor + 1] == self.CHAR_NEWLINE:
             data.offset_start += 1
             data.length -= 1
 
-        if self.source[t_cursor - 1] == os.linesep:
+        if self.source[t_cursor - 1] == self.CHAR_NEWLINE:
             data.offset_stop += 1
             data.length -= 1
 
     def parse_comment(self, data):
         t_cursor = self.cursor + 1
 
-        while t_cursor < len(self.source) and self.source[t_cursor] != os.linesep:
+        while t_cursor < len(self.source) and self.source[t_cursor] != self.CHAR_NEWLINE:
             t_cursor += 1
 
         data.type = self.TYPE_COMMENT
         data.length = t_cursor - self.cursor
+
+    def parse_newline(self, data):
+        t_cursor = self.cursor + 1
+
+        while t_cursor < len(self.source) and self.source[t_cursor] == self.CHAR_NEWLINE:
+            t_cursor += 1
+
+        data.type = self.TYPE_NEWLINE
+        data.length = 1
 
 
 class ElementParser(object):
@@ -168,8 +202,13 @@ class Parser(object):
         self.tokens = tokenizer.tokens
 
     def debug(self):
+        types = Tokenizer.get_types()
+
+        print "TOKEN TYPE".ljust(16), "LENGTH".rjust(6), "  ", "CONTAINS"
         for token in self.tokens:
-            print self.source[token.position:token.position + token.length]
+            print types[token.type].ljust(16), str(token.length).rjust(6), "  ", \
+                    repr(self.source[token.position:token.position + token.length])
+            # print self.source[token.position:token.position + token.length]
 
 if __name__ == '__main__':
     parser = Parser()
