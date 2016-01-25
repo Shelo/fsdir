@@ -7,6 +7,7 @@ import os
 import shutil
 import argparse
 import util.treedisplay
+from fsdir.util import argscontrol
 
 
 class Extract(object):
@@ -353,8 +354,6 @@ class FSDirector(object):
     def begin_sandbox_dir(self):
         """
         Prepares the sandbox directory.
-
-        :return:
         """
         if os.path.exists(self.sandbox_dir):
             shutil.rmtree(self.sandbox_dir)
@@ -374,48 +373,8 @@ class FSDirector(object):
         if not keep:
             self.end_sandbox_dir()
 
-    def config_argv(self):
-        parser = argparse.ArgumentParser(description="FileSystem Director")
-
-        parser.add_argument('file', help='Input file')
-        parser.add_argument('-s', '--sandbox', help='Change the default sandbox dir')
-        parser.add_argument('-a', '--apply', help='Apply sandbox', action='store_true')
-        parser.add_argument('-d', '--display', help='Display the sandbox tree', action='store_true')
-        parser.add_argument('-t', '--test', help='Test the script', action='store_true')
-        parser.add_argument('-r', '--run', help='Run the script', action='store_true')
-        parser.add_argument('-k', '--keep', help='Keep the sandbox', action='store_true')
-        parser.add_argument('-b', '--backup', help='Backup before run', action='store_true')
-
-        args = parser.parse_args()
-
-        self.display = args.display
-
-        if args.sandbox:
-            self.sandbox_dir = args.sandbox
-
-        self.load(args.file)
-
-        if not args.test and not args.run and not args.apply:
-            if self.validate():
-                self.sandbox_run()
-
-        if args.test or args.run:
-            is_valid = self.validate()
-
-            if is_valid:
-                print "The script is valid."
-
-        if args.backup:
-            sys.stderr.write("Backup not supported yet.\n")
-
-        if args.run:
-            self.sandbox_run()
-
-        if args.apply:
-            self.apply(args.keep)
-
     def load_argv(self):
-        self.config_argv()
+        argscontrol.config_argv(self)
 
     def post_process(self):
         if self.display:
