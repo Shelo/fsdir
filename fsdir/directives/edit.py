@@ -9,8 +9,8 @@ class Edit(IterativeDirective):
     def validate(self, dummy_fs, extract, procedure):
         """
         Always validate that the file already exists or has been created
-        previously, also, this always has to be called with a procedure, by it self, this
-        does nothing meaningful.
+        previously, also, this always has to be called with a procedure, by it
+        self, this does nothing.
         """
         for file_path in extract.tokens:
             # should validate that the file actually exists.

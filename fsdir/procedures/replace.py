@@ -14,8 +14,9 @@ class Replace(Procedure):
 
     def validate(self, dummy_fs, extract):
         """
-        Should always receive two tokens, the first one always has to be non-blank, while the
-        second one could be anything. List for multi-line and string for single line.
+        Should always receive two tokens, the first one always has to be
+        non-blank, while the second one could be anything. List for multi-line
+        and string for single line.
         """
         if len(extract.tokens) != 2:
             return False
@@ -32,8 +33,8 @@ class Replace(Procedure):
         if not self.matcher:
             self.matcher = re.compile(extract.tokens[0])
 
-        replacement = "\n".join(extract.tokens[1]) if type(extract.tokens[1] == list) \
-            else extract.tokens[1]
+        replacement = "\n".join(extract.tokens[1]) if \
+                type(extract.tokens[1] == list) else extract.tokens[1]
 
         lines = directive.get_current()
 

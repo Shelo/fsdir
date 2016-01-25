@@ -3,7 +3,8 @@ from fsdir.core import IterativeDirective
 
 class File(IterativeDirective):
     """
-    Base directive that simply selects a file (or files) to pass it to a procedure.
+    Base directive that simply selects a file (or files) to pass it to a
+    procedure.
     """
 
     def __init__(self):

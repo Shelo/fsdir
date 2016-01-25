@@ -5,9 +5,10 @@ import shutil
 
 class DummyFileSystem(object):
     """
-    The dummy file system is a file system resource manager that has the ability to fake
-    transactions, using sandbox, so that the directives and procedures can work without
-    knowing that, and so, don't repeat code, allow for safety, less errors, and more.
+    The dummy file system is a file system resource manager that has the
+    ability to fake transactions, using sandbox, so that the directives and
+    procedures can work without knowing that, and so, don't repeat code, allow
+    for safety, less errors, etc.
 
     Basically, this is a layer of abstraction.
     """
@@ -49,7 +50,8 @@ class DummyFileSystem(object):
 
     def get_canonical_path(self, file_path):
         """
-        The canonical path is a path that considers the current state of this file system.
+        The canonical path is a path that considers the current state of this
+        file system.
 
         :param file_path:       the path to be converted.
         :return:                the canonical path.

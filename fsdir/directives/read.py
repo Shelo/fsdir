@@ -4,8 +4,8 @@ import os
 
 class Read(Directive):
     """
-    Reads one file, storing the content as an internal list of string lines, ignores
-    every change to that list.
+    Reads one file, storing the content as an internal list of string lines,
+    ignores every change to that list.
     """
 
     def __init__(self):
@@ -15,8 +15,8 @@ class Read(Directive):
 
     def validate(self, dummy_fs, extract, procedure):
         """
-        Validate that there's only one file, and that file actually exists. Also, this alwasys
-        has to be called with a procedure.
+        Validate that there's only one file, and that file actually exists.
+        Also, this always has to be called with a procedure.
         """
         if len(extract.tokens) != 1:
             extract.error = "needs one file as argument"

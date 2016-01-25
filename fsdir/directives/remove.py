@@ -4,7 +4,8 @@ from fsdir.core import Directive
 class Remove(Directive):
     def validate(self, dummy_fs, extract, procedure):
         """
-        Validates that all files passed already exist. There should not be blank strings.
+        Validates that all files passed already exist. There should not be
+        blank strings.
 
         :param dummy_fs:
         :param extract:

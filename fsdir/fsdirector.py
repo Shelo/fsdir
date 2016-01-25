@@ -22,8 +22,8 @@ class FSDirector(object):
     """
     File System Director.
 
-    This director fully validates a script before running, in order to maintain the file system safe
-    for incomplete code.
+    This director fully validates a script before running, in order to maintain
+    the file system safe for incomplete code.
     """
 
     directive_regex = re.compile("([A-Z]+) *((?:'[^']*' *)+) *(.*)")
@@ -80,23 +80,30 @@ class FSDirector(object):
         """
         for directive, procedure, extract in self.cache:
             if not directive.validate(self.dummy_fs, extract, procedure):
-                raise ValueError("[%d] Directive %s cannot take the values: %s (%s)" %
-                                 (extract.line, directive.keyword(), str(extract.tokens),
-                                  extract.error))
+                raise ValueError(
+                    "[%d] Directive %s cannot take the values: %s (%s)" %
+                    (extract.line, directive.keyword(), str(extract.tokens),
+                    extract.error)
+                )
 
             if procedure:
-                self.validate_procedure(procedure, directive, extract.sub_extract)
+                self.validate_procedure(procedure, directive,
+                        extract.sub_extract)
 
         return True
 
     def validate_procedure(self, procedure, directive, extract):
         if not procedure.is_applicable_to_directive(directive):
-            raise ValueError("[%d] Procedure %s is not applicable to the directive: %s" %
-                             (extract.line, procedure.keyword(), directive.keyword()))
+            raise ValueError(
+                "[%d] Procedure %s is not applicable to the directive: %s" %
+                (extract.line, procedure.keyword(), directive.keyword())
+            )
 
         if not procedure.validate(self.dummy_fs, extract):
-            raise ValueError("[%d] Procedure %s cannot take the values: %s" %
-                             (extract.line, procedure.keyword(), str(extract.tokens)))
+            raise ValueError(
+                "[%d] Procedure %s cannot take the values: %s" %
+                (extract.line, procedure.keyword(), str(extract.tokens))
+            )
 
     def run(self):
         pass
@@ -132,8 +139,8 @@ class FSDirector(object):
 
     def process_line(self, line):
         """
-        Processes a single line of code. At the end, this should save a fully valid instruction
-        to the instruction cache.
+        Processes a single line of code. At the end, this should save a fully
+        valid instruction to the instruction cache.
 
         :param line:        the line of code to process.
         :return:            a tuple with (directive, procedure, extract)
@@ -150,12 +157,13 @@ class FSDirector(object):
 
         # append the cached instruction, creating a directive and a procedure
         # for it.
-        self.cache.append((directive.__class__(), procedure.__class__() if procedure else None,
-                           extract))
+        procedure_class = procedure.__class__() if procedure else None
+        self.cache.append((directive.__class__(), procedure_class, extract))
 
     def extract_directive(self, source):
         """
-        Matches a pattern and extracts the directive and procedure tokens from it.
+        Matches a pattern and extracts the directive and procedure tokens from
+        it.
 
         :param source:      the source code.
         :return:            the extracted call.
@@ -170,7 +178,8 @@ class FSDirector(object):
             if m.group(3):
                 sub_extract = self.extract_procedure(m.group(3))
 
-            return Extract(keyword, files, self.current_line, sub_extract=sub_extract)
+            return Extract(keyword, files, self.current_line,
+                    sub_extract=sub_extract)
 
         raise SyntaxError("[%d] Wrong line: %s" % (self.current_line, source))
 
@@ -200,8 +209,9 @@ class FSDirector(object):
 
     def catch_lines(self):
         """
-        Catches all lines until the multi-line ending "}". This captures the padding (amount
-        of blank space) of the first line, and removes it from each line.
+        Catches all lines until the multi-line ending "}". This captures the
+        padding (amount of blank space) of the first line, and removes it from
+        each line.
 
         :return:    a list with all lines.
         """
@@ -301,7 +311,9 @@ class FSDirector(object):
             if directive.keyword() == extract.keyword:
                 return directive
 
-        raise ValueError("[%d] Not a valid directive: %s" % (extract.line, extract.keyword))
+        raise ValueError(
+            "[%d] Not a valid directive: %s" % (extract.line, extract.keyword)
+        )
 
     def match_procedure(self, extract):
         """
@@ -316,7 +328,9 @@ class FSDirector(object):
             if procedure.keyword() == extract.keyword:
                 return procedure
 
-        raise ValueError("[%d] Not a valid procedure: %s" % (extract.line, extract.keyword))
+        raise ValueError(
+            "[%d] Not a valid procedure: %s" % (extract.line, extract.keyword)
+        )
 
     def load_procedure(self, procedure):
         """
@@ -353,7 +367,9 @@ class FSDirector(object):
 
     def apply(self, keep=False):
         if not os.path.exists(self.sandbox_dir):
-            raise AssertionError("Sandbox directory does not exists, call sandbox_run() first.")
+            raise AssertionError(
+                "Sandbox directory does not exists, call sandbox_run() first."
+            )
 
         if not keep:
             self.end_sandbox_dir()

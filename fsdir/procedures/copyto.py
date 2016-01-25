@@ -8,7 +8,8 @@ class CopyTo(Procedure):
 
     def validate(self, dummy_fs, extract):
         """
-        Validate that all arguments passed are strings that can reference a real file.
+        Validate that all arguments passed are strings that can reference a
+        real file.
 
         :param extract:     the extract of code.
         :return:            boolean indicating if it's valid or not.
