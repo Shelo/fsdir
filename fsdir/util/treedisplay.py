@@ -11,9 +11,10 @@ class Node(object):
         self.nodes.append(node)
 
     def display(self, spacing=0):
-        indicator = '-' if not self.isdir else '+'
-
-        print "{0}{1}".format(spacing * ' ' + indicator + ' ', self.name)
+        if self.isdir:
+            print "{0}{1}".format(spacing * ' ' + '+ ', self.name)
+        else:
+            print "{0}{1}".format((spacing - 2) * ' ' + '|-- ', self.name)
 
         for node in self.nodes:
             node.display(spacing + 2)
