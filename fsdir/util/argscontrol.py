@@ -4,9 +4,7 @@ import sys
 
 
 def config_argv(director):
-    parser = _config_parser()
-
-    args = parser.parse_args()
+    args = _config_parser().parse_args()
 
     director.display = args.display
 

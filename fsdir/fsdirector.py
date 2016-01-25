@@ -1,21 +1,17 @@
 import re
-
-import sys
-
-from fsdir.core import DummyFileSystem
 import os
 import shutil
-import argparse
 import util.treedisplay
+from fsdir.core import DummyFileSystem
+from fsdir.parser import FSDirParser
 from fsdir.util import argscontrol
 
 
 class Extract(object):
-    def __init__(self, kw, tokens, line, sub_extract=None):
+    def __init__(self, kw, tokens, sub_extract=None):
         self.keyword = kw
         self.tokens = tokens
         self.sub_extract = sub_extract
-        self.line = line
         self.error = None
 
 
@@ -23,12 +19,8 @@ class FSDirector(object):
     """
     File System Director.
 
-    This director fully validates a script before running, in order to maintain
-    the file system safe for incomplete code.
+    <need for a better explanation here>
     """
-
-    directive_regex = re.compile("([A-Z]+) *((?:'[^']*' *)+) *(.*)")
-    procedure_regex = re.compile("([A-Z]+) *( *\(.*\) *)* *(\{?)")
 
     sandbox_dir = ".sandbox"
 
@@ -37,9 +29,6 @@ class FSDirector(object):
 
         self.directives = []
         self.procedures = []
-
-        self.lines = []
-        self.current_line = 0
 
         self.dummy_fs = DummyFileSystem()
 
@@ -64,14 +53,31 @@ class FSDirector(object):
         :param script:      script as string.
         :return:
         """
-        self.lines = [line for line in script.split("\n")]
+        parser = FSDirParser()
+        commands = parser.parse_s(script)
 
-        while self.current_line < len(self.lines):
-            line = self.lines[self.current_line]
-            self.current_line += 1
+        for command in commands:
+            self.index_command(command)
 
-            if line:
-                self.process_line(line)
+    def index_command(self, command):
+        directive = self.find_directive(command.directive)
+        files = command.directive_params
+
+        directive_copy = directive.__class__()
+        procedure_copy = None
+
+        sub_extract = None
+
+        if command.procedure:
+            args = command.procedure_params
+            procedure = self.find_procedure(command.procedure)
+            procedure_copy = procedure.__class__()
+
+            sub_extract = Extract(procedure.keyword(), args)
+
+        extract = Extract(directive.keyword(), files, sub_extract)
+
+        self.cache.append((directive_copy, procedure_copy, extract))
 
     def validate(self):
         """
@@ -96,14 +102,14 @@ class FSDirector(object):
     def validate_procedure(self, procedure, directive, extract):
         if not procedure.is_applicable_to_directive(directive):
             raise ValueError(
-                "[%d] Procedure %s is not applicable to the directive: %s" %
-                (extract.line, procedure.keyword(), directive.keyword())
+                "Procedure %s is not applicable to the directive: %s" %
+                (procedure.keyword(), directive.keyword())
             )
 
         if not procedure.validate(self.dummy_fs, extract):
             raise ValueError(
-                "[%d] Procedure %s cannot take the values: %s" %
-                (extract.line, procedure.keyword(), str(extract.tokens))
+                "Procedure %s cannot take the values: %s" %
+                (procedure.keyword(), str(extract.tokens))
             )
 
     def run(self):
@@ -132,205 +138,44 @@ class FSDirector(object):
 
     def _run_procedure(self, directive, procedure, extract):
         if directive.repeat_each_file():
-            for file in extract.tokens:
+            for _ in extract.tokens:
                 directive.next()
                 procedure.run(self.dummy_fs, directive, extract.sub_extract)
         else:
             procedure.run(self.dummy_fs, directive, extract.sub_extract)
 
-    def process_line(self, line):
-        """
-        Processes a single line of code. At the end, this should save a fully
-        valid instruction to the instruction cache.
-
-        :param line:        the line of code to process.
-        :return:            a tuple with (directive, procedure, extract)
-        """
-        if line[0] == '#':
-            return None
-
-        extract = self.extract_directive(line)
-        directive = self.match_directive(extract)
-
-        procedure = None
-        if extract.sub_extract:
-            procedure = self.match_procedure(extract.sub_extract)
-
-        # append the cached instruction, creating a directive and a procedure
-        # for it.
-        procedure_class = procedure.__class__() if procedure else None
-        self.cache.append((directive.__class__(), procedure_class, extract))
-
-    def extract_directive(self, source):
-        """
-        Matches a pattern and extracts the directive and procedure tokens from
-        it.
-
-        :param source:      the source code.
-        :return:            the extracted call.
-        """
-        m = self.directive_regex.match(source)
-
-        if m:
-            sub_extract = None
-            keyword = m.group(1)
-            files = self.read_directive_args(m.group(2))
-
-            if m.group(3):
-                sub_extract = self.extract_procedure(m.group(3))
-
-            return Extract(keyword, files, self.current_line,
-                    sub_extract=sub_extract)
-
-        raise SyntaxError("[%d] Wrong line: %s" % (self.current_line, source))
-
-    def extract_procedure(self, source):
-        """
-        Extracts data from a procedure.
-
-        :param source:      the source code for the procedure.
-        :return:            the extracted procedure.
-        """
-        m = self.procedure_regex.match(source)
-
-        if m:
-            keyword = m.group(1)
-
-            args = []
-
-            if m.group(2):
-                args = self.read_procedure_args(m.group(2))
-
-            if m.group(3):
-                args.append(self.catch_lines())
-
-            return Extract(keyword, args, self.current_line)
-
-        return None
-
-    def catch_lines(self):
-        """
-        Catches all lines until the multi-line ending "}". This captures the
-        padding (amount of blank space) of the first line, and removes it from
-        each line.
-
-        :return:    a list with all lines.
-        """
-        lines = []
-
-        line = self.request_line()
-
-        # find padding of the first line.
-        padding = self.find_padding(line)
-
-        while line != "}":
-            # apply the padding to each line.
-            if line.startswith(padding):
-                line = line[len(padding):]
-
-            lines.append(line)
-            line = self.request_line()
-
-        return lines
-
-    @staticmethod
-    def find_padding(line):
-        padding = 0
-
-        if line != "}" and len(line) != 0:
-            for c in line:
-                if c == ' ' or c == '\t':
-                    padding += 1
-                else:
-                    break
-
-        return line[:padding]
-
-    def request_line(self):
-        """
-        Request for one more line, skipping it through the regular pipeline.
-
-        :return:    the next line of the source code.
-        """
-        self.current_line += 1
-        return self.lines[self.current_line - 1]
-
-    @staticmethod
-    def read_procedure_args(source):
-        """
-        Reads simple arguments from a procedure.
-
-        :param source:  the source code for the args.
-        :return:        the arguments as a list.
-        """
-        args = []
-
-        start = -1
-        for index, char in enumerate(source):
-            if start == -1:
-                if char == '(':
-                    start = index + 1
-            else:
-                if char == ')':
-                    args.append(source[start:index])
-                    start = -1
-
-        return args
-
-    @staticmethod
-    def read_directive_args(source):
-        """
-        Reads simple arguments from a procedure.
-
-        :param source:      the source code for the args.
-        :return:            the arguments as a list.
-        """
-        args = []
-
-        start = -1
-        for index, char in enumerate(source):
-            if start == -1:
-                if char == '\'':
-                    start = index + 1
-            else:
-                if char == '\'':
-                    args.append(source[start:index])
-                    start = -1
-
-        return args
-
-    def match_directive(self, extract):
+    def find_directive(self, keyword):
         """
         Finds the directive that matches the name of the extract given.
 
         Raises a ValueError exception if nothing is found.
 
-        :param extract:     the extract to match.
+        :param keyword:     the keyword to match.
         :return:            the directive.
         """
         for directive in self.directives:
-            if directive.keyword() == extract.keyword:
+            if directive.keyword() == keyword:
                 return directive
 
         raise ValueError(
-            "[%d] Not a valid directive: %s" % (extract.line, extract.keyword)
+            "Not a valid directive: %s" % keyword
         )
 
-    def match_procedure(self, extract):
+    def find_procedure(self, keyword):
         """
         Finds the procedure that matches the name of the extract given.
 
         Raises a ValueError exception if nothing is found.
 
-        :param extract:     the extract to match.
+        :param keyword:     the keyword to match.
         :return:            the procedure.
         """
         for procedure in self.procedures:
-            if procedure.keyword() == extract.keyword:
+            if procedure.keyword() == keyword:
                 return procedure
 
         raise ValueError(
-            "[%d] Not a valid procedure: %s" % (extract.line, extract.keyword)
+            "Not a valid procedure: %s" % keyword
         )
 
     def load_procedure(self, procedure):

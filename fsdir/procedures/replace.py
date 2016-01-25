@@ -33,12 +33,9 @@ class Replace(Procedure):
         if not self.matcher:
             self.matcher = re.compile(extract.tokens[0])
 
-        replacement = "\n".join(extract.tokens[1]) if \
-                type(extract.tokens[1] == list) else extract.tokens[1]
-
         lines = directive.get_current()
 
-        self.find_and_replace(lines, self.matcher, replacement)
+        self.find_and_replace(lines, self.matcher, extract.tokens[1])
 
     @staticmethod
     def find_and_replace(lines, matcher, replacement):

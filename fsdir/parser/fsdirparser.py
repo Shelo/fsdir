@@ -30,7 +30,7 @@ class Command(object):
         )
 
 
-class Parser(object):
+class FSDirParser(object):
     def __init__(self):
         self.tokens = None
         self.source = None
@@ -118,7 +118,7 @@ class Parser(object):
 
 
 if __name__ == '__main__':
-    parser = Parser()
+    parser = FSDirParser()
 
     instructions = None
     with open("example/dev.fsdir") as f:
