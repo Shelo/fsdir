@@ -39,13 +39,22 @@ class DummyFileSystem(object):
         return self._sandbox
 
     def register_file(self, file_path):
-        self.temp_files.append(file_path)
+        """
+        Registers a file (not created yet) in the file system for later
+        reference.
+
+        :param file_path:   the path to be registered.
+        :return:
+        """
+        self.temp_files.append(self.get_canonical_path(file_path))
 
     def isfile(self, file_path):
-        return os.path.isfile(file_path) or file_path in self.temp_files
+        abs_path = self.get_canonical_path(file_path)
+        return os.path.isfile(file_path) or abs_path in self.temp_files
 
     def exists(self, file_path):
-        return os.path.exists(file_path) or file_path in self.temp_files
+        abs_path = self.get_canonical_path(file_path)
+        return os.path.exists(file_path) or abs_path in self.temp_files
 
     def get_canonical_path(self, file_path):
         """
@@ -55,7 +64,8 @@ class DummyFileSystem(object):
         :param file_path:       the path to be converted.
         :return:                the canonical path.
         """
-        return os.path.join(self._prefix, file_path)
+        # TODO: this may need a revision.
+        return self._prefix + os.path.abspath(file_path)
 
     def open_file(self, file_path, mode="r"):
         canonical_path = self.get_canonical_path(file_path)
